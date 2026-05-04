@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elise — Suivi bebe</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FAF7F2; --warm-white: #FFFDF9; --sage: #8BA888;
+    --sage-light: #C8DACC; --sage-dark: #4A6B47; --terracotta: #C4714A;
+    --terra-light: #F0D5C8; --charcoal: #2C2C2A; --muted: #7A7872;
+    --border: rgba(44,44,42,0.1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--cream); color:var(--charcoal); min-height:100vh; }
+  .header { background:var(--warm-white); border-bottom:1px solid var(--border); padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
+  .header-left { display:flex; align-items:center; gap:12px; }
+  .avatar { width:44px; height:44px; border-radius:50%; background:var(--terra-light); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-size:18px; color:var(--terracotta); }
+  .header-name { font-family:'Playfair Display',serif; font-size:20px; font-weight:400; }
+  .header-age { font-size:12px; color:var(--muted); margin-top:2px; }
+  .header-right { text-align:right; font-size:11px; color:var(--muted); line-height:1.5; }
+  .main { max-width:860px; margin:0 auto; padding:1.5rem 1rem; }
+  .premature-note { background:#EDF5EE; border:1px solid var(--sage-light); border-radius:10px; padding:.75rem 1rem; font-size:12px; color:var(--sage-dark); line-height:1.6; margin-bottom:1.25rem; }
+  .brief-card { background:var(--warm-white); border:1px solid var(--border); border-radius:16px; padding:1.5rem; margin-bottom:1.25rem; position:relative; overflow:hidden; }
+  .brief-card::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--sage); }
+  .brief-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:8px; }
+  .brief-title { font-family:'Playfair Display',serif; font-size:16px; font-weight:400; }
+  .pills { display:flex; gap:5px; flex-wrap:wrap; }
+  .pill { font-size:10px; padding:2px 8px; border-radius:99px; border:1px solid var(--border); color:var(--muted); background:var(--cream); }
+  .brief-text { font-size:14px; line-height:1.8; color:var(--charcoal); min-height:60px; }
+  .loading-dots { display:flex; gap:6px; align-items:center; padding:.5rem 0; }
+  .dot { width:7px; height:7px; border-radius:50%; background:var(--sage); animation:pulse 1.2s ease-in-out infinite; }
+  .dot:nth-child(2) { animation-delay:.2s; } .dot:nth-child(3) { animation-delay:.4s; }
+  @keyframes pulse { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1)} }
+  .refresh-btn { margin-top:.75rem; padding:6px 14px; border-radius:8px; border:1px solid var(--border); background:transparent; font-family:'DM Sans',sans-serif; font-size:12px; color:var(--muted); cursor:pointer; transition:all .15s; }
+  .refresh-btn:hover { background:var(--cream); color:var(--charcoal); }
+  .domains { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin-bottom:1.25rem; }
+  .domain-card { background:var(--warm-white); border:1px solid var(--border); border-radius:14px; padding:1.1rem; transition:all .2s; cursor:pointer; }
+  .domain-card:hover { border-color:var(--sage-light); transform:translateY(-1px); }
+  .domain-icon { font-size:18px; margin-bottom:8px; display:block; }
+  .domain-label { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:5px; }
+  .domain-title { font-family:'Playfair Display',serif; font-size:14px; margin-bottom:7px; min-height:20px; }
+  .domain-content { font-size:13px; line-height:1.6; color:var(--muted); min-height:50px; }
+  .domain-tag { display:inline-block; margin-top:8px; font-size:10px; padding:2px 8px; border-radius:99px; }
+  .tag-sage { background:#E1F5EE; color:#085041; } .tag-terra { background:var(--terra-light); color:#7a3820; } .tag-amber { background:#FAEEDA; color:#633806; }
+  .domain-hint { margin-top:8px; font-size:11px; color:var(--sage-dark); opacity:0; transition:opacity .2s; }
+  .domain-card:hover .domain-hint { opacity:1; }
+  .sources { background:var(--warm-white); border:1px solid var(--border); border-radius:14px; padding:1rem 1.25rem; margin-bottom:1.25rem; }
+  .sources-title { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:10px; }
+  .sources-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:6px; }
+  .source-item { display:flex; align-items:center; gap:7px; padding:7px 10px; border-radius:8px; border:1px solid var(--border); font-size:12px; color:var(--charcoal); background:var(--cream); text-decoration:none; transition:all .15s; }
+  .source-item:hover { border-color:var(--sage-light); background:#EDF5EE; }
+  .source-dot { width:5px; height:5px; border-radius:50%; background:var(--sage); flex-shrink:0; }
+  .timeline { background:var(--warm-white); border:1px solid var(--border); border-radius:14px; padding:1rem 1.25rem; margin-bottom:1.25rem; }
+  .timeline-title { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:12px; }
+  .timeline-bar { position:relative; height:5px; background:var(--sage-light); border-radius:99px; margin-bottom:8px; }
+  .timeline-fill { position:absolute; left:0; top:0; bottom:0; background:var(--sage); border-radius:99px; transition:width .5s ease; }
+  .timeline-marker { position:absolute; top:50%; transform:translate(-50%,-50%); width:13px; height:13px; border-radius:50%; background:var(--terracotta); border:2px solid white; box-shadow:0 0 0 2px var(--terracotta); }
+  .timeline-labels { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
+  .qa-section { background:var(--warm-white); border:1px solid var(--border); border-radius:14px; padding:1.25rem; margin-bottom:1.25rem; }
+  .qa-title { font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:10px; }
+  .qa-input-row { display:flex; gap:8px; }
+  .qa-input { flex:1; padding:9px 13px; border-radius:8px; border:1px solid var(--border); background:var(--cream); font-family:'DM Sans',sans-serif; font-size:13px; color:var(--charcoal); outline:none; transition:border-color .2s; }
+  .qa-input:focus { border-color:var(--sage); }
+  .qa-input::placeholder { color:var(--muted); }
+  .qa-btn { padding:9px 16px; border-radius:8px; border:none; background:var(--sage-dark); color:white; font-family:'DM Sans',sans-serif; font-size:13px; cursor:pointer; transition:background .2s; white-space:nowrap; }
+  .qa-btn:hover { background:var(--sage); }
+  .chat-thread { margin-top:12px; display:flex; flex-direction:column; gap:8px; }
+  .bubble { padding:9px 13px; border-radius:12px; font-size:13px; line-height:1.6; max-width:88%; }
+  .bubble.user { align-self:flex-end; background:var(--terra-light); color:var(--charcoal); }
+  .bubble.ai { align-self:flex-start; background:var(--cream); border:1px solid var(--border); color:var(--charcoal); }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+  .fade-in { animation:fadeIn .3s ease forwards; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <div class="avatar">E</div>
+    <div>
+      <div class="header-name">Elise</div>
+      <div class="header-age" id="headerAge">—</div>
+    </div>
+  </div>
+  <div class="header-right" id="headerRight">—</div>
+</div>
+<div class="main">
+  <div class="premature-note">
+    Elise est nee prematurement (5 sem. avant terme). Tous les conseils sont bases sur son <strong>age corrige</strong>. Elle est au lait maternise en poudre avec diversification deja commencee.
+  </div>
+  <div class="brief-card">
+    <div class="brief-header">
+      <div class="brief-title">Brief de la semaine</div>
+      <div class="pills">
+        <span class="pill">CDC</span><span class="pill">UNICEF</span>
+        <span class="pill">Naitre &amp; Grandir</span><span class="pill">Montessori</span>
+      </div>
+    </div>
+    <div class="brief-text" id="briefText"><div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+    <button class="refresh-btn" onclick="loadAll()">Actualiser</button>
+  </div>
+  <div class="domains">
+    <div class="domain-card" onclick="prefillQuestion('developpement moteur et cognitif')">
+      <span class="domain-icon">🌱</span>
+      <div class="domain-label">Developpement</div>
+      <div class="domain-title" id="dev-title"><div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="domain-content" id="dev-content"></div>
+      <span class="domain-tag tag-sage">Etape cle</span>
+      <div class="domain-hint">Approfondir →</div>
+    </div>
+    <div class="domain-card" onclick="prefillQuestion('alimentation et diversification')">
+      <span class="domain-icon">🍎</span>
+      <div class="domain-label">Alimentation</div>
+      <div class="domain-title" id="alim-title"><div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="domain-content" id="alim-content"></div>
+      <span class="domain-tag tag-terra">Cette semaine</span>
+      <div class="domain-hint">Approfondir →</div>
+    </div>
+    <div class="domain-card" onclick="prefillQuestion('eveil et activites Montessori')">
+      <span class="domain-icon">✨</span>
+      <div class="domain-label">Eveil &amp; Montessori</div>
+      <div class="domain-title" id="eveil-title"><div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>
+      <div class="domain-content" id="eveil-content"></div>
+      <span class="domain-tag tag-amber">A tester</span>
+      <div class="domain-hint">Approfondir →</div>
+    </div>
+  </div>
+  <div class="sources">
+    <div class="sources-title">Sources de reference</div>
+    <div class="sources-grid">
+      <a class="source-item" href="https://www.cdc.gov/ncbddd/actearly/milestones/index.html" target="_blank"><div class="source-dot"></div>CDC Milestone Tracker</a>
+      <a class="source-item" href="https://www.unicef.org/parenting" target="_blank"><div class="source-dot"></div>UNICEF Parenting</a>
+      <a class="source-item" href="https://naitreetgrandir.com" target="_blank"><div class="source-dot"></div>Naitre et Grandir</a>
+      <a class="source-item" href="https://www.montessori.com" target="_blank"><div class="source-dot"></div>Montessori</a>
+    </div>
+  </div>
+  <div class="timeline">
+    <div class="timeline-title">Progression — 0 a 24 mois (age corrige)</div>
+    <div class="timeline-bar">
+      <div class="timeline-fill" id="timelineFill"></div>
+      <div class="timeline-marker" id="timelineMarker"></div>
+    </div>
+    <div class="timeline-labels"><span>Naissance</span><span id="timelineLabel">—</span><span>24 mois</span></div>
+  </div>
+  <div class="qa-section">
+    <div class="qa-title">Poser une question sur Elise</div>
+    <div class="qa-input-row">
+      <input class="qa-input" id="qaInput" type="text" placeholder="Ex: elle ne mange plus bien cette semaine..." />
+      <button class="qa-btn" onclick="askQuestion()">Envoyer</button>
+    </div>
+    <div class="chat-thread" id="chatThread"></div>
+  </div>
+</div>
+<script>
+var DATE_NAISSANCE = new Date("2025-11-02");
+var DATE_TERME     = new Date("2025-12-09");
+
+function getAgeDetails() {
+  var now = new Date();
+  var moisReel = Math.floor((now - DATE_NAISSANCE) / (1000*60*60*24*30.44));
+  var diffCorrige = Math.floor((now - DATE_TERME) / (1000*60*60*24));
+  var moisCorrige = Math.max(0, Math.floor(diffCorrige / 30.44));
+  var semaine = Math.max(1, Math.ceil((diffCorrige % 30.44) / 7));
+  var semPrem = Math.round((DATE_TERME - DATE_NAISSANCE) / (1000*60*60*24*7));
+  return { moisReel:moisReel, mois:moisCorrige, semaine:semaine, semPrem:semPrem };
+}
+
+function initHeader() {
+  var a = getAgeDetails();
+  var now = new Date();
+  document.getElementById('headerAge').textContent = a.moisReel + ' mois reels / ' + a.mois + ' mois corrige (sem. ' + a.semaine + ')';
+  document.getElementById('headerRight').innerHTML = now.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}) + '<br>' + a.semPrem + ' sem. prematuree';
+  var pct = Math.min((a.mois/24)*100,100);
+  document.getElementById('timelineFill').style.width = pct+'%';
+  document.getElementById('timelineMarker').style.left = pct+'%';
+  document.getElementById('timelineLabel').textContent = a.mois+' mois corrige';
+}
+
+function contexte() {
+  var a = getAgeDetails();
+  return 'Elise est prematuree (' + a.semPrem + ' sem. avant terme). Age reel : ' + a.moisReel + ' mois. Age corrige : ' + a.mois + ' mois (semaine ' + a.semaine + '). Elle est nourrie au lait maternise en poudre (pas de lait maternel) et la diversification alimentaire est deja commencee. Utilise toujours l\'age corrige pour les recommandations. Ton chaleureux et bienveillant, sans jugement.';
+}
+
+function dots() { return '<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>'; }
+
+async function callAPI(prompt, system) {
+  var res = await fetch('/.netlify/functions/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system: system || ('Tu es un expert en developpement du nourrisson. Reponds en francais. ' + contexte()),
+      messages: [{ role:'user', content:prompt }]
+    })
+  });
+  var data = await res.json();
+  return data.content && data.content[0] ? data.content[0].text : 'Erreur.';
+}
+
+async function loadBrief() {
+  var a = getAgeDetails();
+  document.getElementById('briefText').innerHTML = dots();
+  var text = await callAPI(contexte() + ' Redige un brief hebdomadaire concis (5-6 phrases) pour les parents d\'Elise. Couvre : 1 point cle developpement a ' + a.mois + ' mois corrige, 1 conseil pratique sur la diversification en cours, 1 activite d\'eveil Montessori. Sources : CDC, UNICEF, Naitre et Grandir, Montessori.');
+  document.getElementById('briefText').innerHTML = '<span class="fade-in">' + text.replace(/\n/g,'<br>') + '</span>';
+}
+
+async function loadDomain(key, prompt) {
+  document.getElementById(key+'-title').innerHTML = dots();
+  document.getElementById(key+'-content').textContent = '';
+  try {
+    var raw = await callAPI(prompt, 'Reponds UNIQUEMENT en JSON valide sans backticks. ' + contexte());
+    var json = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    document.getElementById(key+'-title').textContent = json.titre;
+    document.getElementById(key+'-content').textContent = json.contenu;
+  } catch(e) {
+    document.getElementById(key+'-title').textContent = '—';
+    document.getElementById(key+'-content').textContent = 'Erreur de chargement.';
+  }
+}
+
+function loadDomains() {
+  var a = getAgeDetails();
+  var base = 'Pour Elise a ' + a.mois + ' mois d\'age corrige. ';
+  loadDomain('dev', base+'Titre court (4-5 mots) et description (2 phrases) sur l\'etape de developpement de la semaine. JSON: {"titre":"...","contenu":"..."}');
+  loadDomain('alim', base+'Lait maternise + diversification deja commencee. Titre court (4-5 mots) et description concrete (2 phrases) sur le focus alimentation cette semaine. JSON: {"titre":"...","contenu":"..."}');
+  loadDomain('eveil', base+'Pedagogie Montessori. Titre court (4-5 mots) et description (2 phrases) sur l\'activite d\'eveil ideale. JSON: {"titre":"...","contenu":"..."}');
+}
+
+function loadAll() { loadBrief(); loadDomains(); }
+
+function prefillQuestion(sujet) {
+  document.getElementById('qaInput').value = 'Dis-m\'en plus sur ' + sujet + ' pour Elise cette semaine.';
+  document.getElementById('qaInput').focus();
+}
+
+async function askQuestion() {
+  var input = document.getElementById('qaInput');
+  var q = input.value.trim();
+  if (!q) return;
+  input.value = '';
+  var thread = document.getElementById('chatThread');
+  var ub = document.createElement('div');
+  ub.className = 'bubble user fade-in';
+  ub.textContent = q;
+  thread.appendChild(ub);
+  var ab = document.createElement('div');
+  ab.className = 'bubble ai fade-in';
+  ab.innerHTML = dots();
+  thread.appendChild(ab);
+  ab.scrollIntoView({behavior:'smooth',block:'end'});
+  var answer = await callAPI(contexte() + ' Question du parent : "' + q + '". Reponds en 3-5 phrases, chaleureux et concret. CDC, UNICEF, Naitre et Grandir, Montessori.');
+  ab.innerHTML = answer.replace(/\n/g,'<br>');
+  ab.scrollIntoView({behavior:'smooth',block:'end'});
+}
+
+document.getElementById('qaInput').addEventListener('keydown', function(e){ if(e.key==='Enter') askQuestion(); });
+initHeader();
+loadAll();
+</script>
+</body>
+</html>
